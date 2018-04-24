@@ -58,6 +58,10 @@ static BT_STACK_NOINIT(tx_thread_stack, CONFIG_BT_HCI_TX_STACK_SIZE);
 
 static void init_work(struct k_work *work);
 
+#if defined(CONFIG_BT_BLUENRG_ACI)
+static int hci_send_aci_config_data_controller_mode(void);
+#endif
+
 struct bt_dev bt_dev = {
 	.init          = _K_WORK_INITIALIZER(init_work),
 	/* Give cmd_sem allowing to send first HCI_Reset cmd, the only
@@ -662,6 +666,30 @@ static int hci_le_read_remote_features(struct bt_conn *conn)
 
 	return 0;
 }
+
+#if defined(CONFIG_BT_BLUENRG_ACI)
+static int hci_send_aci_config_data_controller_mode(void)
+{
+	u8_t *data;
+
+	struct net_buf *buf;
+
+	buf = bt_hci_cmd_create(0xFC0C, sizeof(uint8_t)*(3));
+	if (!buf) {
+		return -ENOBUFS;
+	}
+
+	data = net_buf_add(buf, sizeof(uint8_t)*(3));
+	data[0] = 0x2c;
+	data[1] = 0x1;
+	/* Force BlueNRG-MS roles to controller role */
+	data[2] = 0x1;
+
+	bt_hci_cmd_send(0xFC0C, buf);
+
+	return 0;
+}
+#endif /* CONFIG_BT_BLUENRG_ACI */
 
 static int hci_le_set_data_len(struct bt_conn *conn)
 {
@@ -3512,6 +3540,10 @@ static int common_init(void)
 	}
 	hci_reset_complete(rsp);
 	net_buf_unref(rsp);
+
+#if defined(CONFIG_BT_BLUENRG_ACI)
+	hci_send_aci_config_data_controller_mode();
+#endif
 
 	/* Read Local Supported Features */
 	err = bt_hci_cmd_send_sync(BT_HCI_OP_READ_LOCAL_FEATURES, NULL, &rsp);
