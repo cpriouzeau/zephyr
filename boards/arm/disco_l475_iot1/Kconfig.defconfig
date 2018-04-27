@@ -10,6 +10,20 @@ if BOARD_DISCO_L475_IOT1
 config BOARD
 	default disco_l475_iot1
 
+if BT
+
+choice CLOCK_STM32_SYSCLK_SRC
+	default CLOCK_STM32_SYSCLK_SRC_MSI
+endchoice
+
+endif #BT
+
+if !BT
+choice CLOCK_STM32_SYSCLK_SRC
+	default CLOCK_STM32_SYSCLK_SRC_PLL
+endchoice
+endif #BT
+
 if CLOCK_STM32_SYSCLK_SRC_PLL
 
 if CLOCK_STM32_PLL_SRC_HSI
@@ -33,6 +47,9 @@ endif # CLOCK_STM32_PLL_SRC_HSI
 endif # CLOCK_STM32_SYSCLK_SRC_PLL
 
 if CLOCK_STM32_SYSCLK_SRC_MSI
+
+config CLOCK_STM32_MSI_RANGE
+	default 8
 
 config SYS_CLOCK_HW_CYCLES_PER_SEC
 	default 16000000
@@ -85,5 +102,36 @@ config VL53L0X_XSHUT_GPIO_PIN_NUM
 	default 6
 
 endif #VL53L0X
+
+if BT
+
+config SPI
+	default y
+
+config BT_SPI_BLUENRG
+	default y
+config BT_SPI_IRQ_DEV_NAME
+	default "GPIOE"
+config BT_SPI_IRQ_PIN
+	default 6
+config BT_SPI_CHIP_SELECT_DEV_NAME
+	default "GPIOD"
+config BT_SPI_CHIP_SELECT_PIN
+	default 13
+config BT_SPI_RESET_DEV_NAME
+	default "GPIOA"
+config BT_SPI_RESET_PIN
+	default 8
+config BT_SPI_MAX_CLK_FREQ
+	default 2000000
+config BT_BLUENRG_ACI
+	default y
+# Disable Flow control
+config BT_HCI_ACL_FLOW_CONTROL
+	default n
+config BT_HCI_VS_EXT
+	default n
+
+endif #BT
 
 endif # BOARD_DISCO_L475_IOT1
